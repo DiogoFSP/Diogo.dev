@@ -16,10 +16,10 @@
   --fg-3: #6E6E76;
   --fg-4: #45454C;
 
-  /* Accent — single accent, set by Tweaks */
-  --accent: #E5E5E7;        /* near-white default (mono) */
-  --accent-glow: rgba(229, 229, 231, 0.15);
-  --accent-soft: rgba(229, 229, 231, 0.08);
+  /* Accent — amber (a escolha do design v3) */
+  --accent: #FFB454;
+  --accent-glow: rgba(255, 180, 84, 0.20);
+  --accent-soft: rgba(255, 180, 84, 0.10);
   --on-accent: #0A0A0B;     /* text/icon color on top of accent */
 
   /* Glass surfaces (sticky nav, overlays) */
@@ -72,10 +72,10 @@
   --fg-3: #837D6F;
   --fg-4: #AFA792;
 
-  /* Accent default in light = ink blue (overridden by Tweaks) */
-  --accent: #2A5Fd6;
-  --accent-glow: rgba(42, 95, 214, 0.18);
-  --accent-soft: rgba(42, 95, 214, 0.10);
+  /* Accent no tema claro = amber escurecido para contraste no fundo areia */
+  --accent: #B6701A;
+  --accent-glow: rgba(182, 112, 26, 0.18);
+  --accent-soft: rgba(182, 112, 26, 0.10);
   --on-accent: #FBF9F3;
 
   /* Glass — light frosted */
