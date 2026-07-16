@@ -5,11 +5,11 @@ type Lang = "pt" | "en";
 
 const LangContext = createContext<{
   lang: Lang;
-  toggleLang: () => void;
+  setLang: (l: Lang) => void;
   t: (pt: string, en: string) => string;
 }>({
   lang: "pt",
-  toggleLang: () => {},
+  setLang: () => {},
   t: (pt) => pt,
 });
 
@@ -23,14 +23,10 @@ export function LangProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = lang;
   }, [lang]);
 
-  const toggleLang = () => {
-    setLang(lang === "pt" ? "en" : "pt");
-  };
-
   const t = (pt: string, en: string) => (lang === "en" ? en : pt);
 
   return (
-    <LangContext.Provider value={{ lang, toggleLang, t }}>
+    <LangContext.Provider value={{ lang, setLang, t }}>
       {children}
     </LangContext.Provider>
   );

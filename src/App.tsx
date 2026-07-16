@@ -1,27 +1,20 @@
-import { useLang } from "./lang";
-import { useTheme } from "./theme";
+import { Route, Routes } from "react-router-dom";
+import TopNav from "./components/TopNav";
+import Contact from "./pages/Contact";
+import Home from "./pages/Home";
+import Project from "./pages/Project";
 
 function App() {
-  const { theme, toggleTheme } = useTheme();
-  const { lang, toggleLang, t } = useLang();
   return (
-    <main>
-      <button className="btn" onClick={toggleTheme}>
-        {theme === "dark" ? "modo claro" : "modo escuro"}
-      </button>
-      <button className="btn" onClick={toggleLang}>
-        {lang === "pt" ? "EN" : "PT"}
-      </button>
-      <h1>Diogo Pinto</h1>
-      <p>{t("Estudante de Engenharia Informática · ISEC", "Computer Engineering student · ISEC")}</p>
-
-      <div>
-        <span className="tag">Java</span>
-        <span className="tag">JavaFX</span>
-        <span className="tag accent">AI</span>
-      </div>
-    </main>
-  )
+    <>
+      <TopNav />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/projeto/:slug" element={<Project />} />
+        <Route path="/contacto" element={<Contact />} />
+      </Routes>
+    </>
+  );
 }
 
-export default App
+export default App;
