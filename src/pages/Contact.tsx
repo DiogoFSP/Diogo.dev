@@ -196,13 +196,13 @@ export default function Contact() {
         </div>
       </section>
 
-      <div className="container" style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 64, paddingBottom: 100, alignItems: "start" }}>
+      <div className="container contact-grid" style={{ paddingBottom: 100 }}>
         <form onSubmit={onSubmit} style={{ background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", padding: 32, display: "flex", flexDirection: "column", gap: 20 }}>
           <div className="mono" style={{ fontSize: 10, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: -4 }}>
             {t("mensagem", "message")} · {new Date().toLocaleDateString(lang === "en" ? "en-GB" : "pt-PT", { day: "2-digit", month: "short", year: "numeric" })}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+          <div className="two-col">
             <Field label={t("nome", "name")} error={touched.name ? errors.name : null}>
               <input className="input" value={form.name} onChange={(e) => update("name", e.target.value)} onBlur={() => blur("name")} placeholder={t("Primeiro e último nome", "First and last name")} />
             </Field>
@@ -285,7 +285,7 @@ function SubjectPicker({ value, onChange }: { value: FormState["subject"]; onCha
     { v: "outro", label: t("Outro", "Other"), icon: "dot" },
   ];
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+    <div className="subject-grid">
       {opts.map((o) => {
         const active = value === o.v;
         return (

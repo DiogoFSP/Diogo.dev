@@ -59,7 +59,7 @@ function Header({ project, Thumb }: { project: ProjectData; Thumb?: React.FC }) 
   const { t, lang } = useLang();
   return (
     <section style={{ padding: "32px 0 48px" }}>
-      <div className="container" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 40, alignItems: "stretch" }}>
+      <div className="container project-hero">
         <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
           <div className="mono" style={{ fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 18, display: "flex", gap: 14, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ width: 6, height: 6, borderRadius: 999, background: project.accent }} />
@@ -87,7 +87,7 @@ function Header({ project, Thumb }: { project: ProjectData; Thumb?: React.FC }) 
         </div>
 
         {/* painel da miniatura, com moldura de "janela" */}
-        <div style={{ position: "relative", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", minHeight: 420 }}>
+        <div className="project-thumb" style={{ position: "relative", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)" }}>
           <div style={{ position: "absolute", inset: 0 }}>{Thumb && <Thumb />}</div>
           <div style={{ position: "absolute", inset: 0, background: `radial-gradient(60% 60% at 80% 20%, ${project.accent}22, transparent 60%)`, pointerEvents: "none" }} />
           <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: 5 }}>
@@ -105,7 +105,7 @@ function MetricsStrip({ project }: { project: ProjectData }) {
   const { lang } = useLang();
   return (
     <div className="container" style={{ marginBottom: 64 }}>
-      <div style={{ display: "grid", gridTemplateColumns: `repeat(${project.metrics.length + 1}, 1fr)`, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+      <div className="metrics-strip" style={{ "--cols": project.metrics.length + 1 } as React.CSSProperties}>
         {project.metrics.map((m, i) => (
           <div key={i} style={{ padding: "20px 24px", borderRight: "1px solid var(--line)" }}>
             <div className="mono" style={{ fontSize: 10, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>{loc(m.label, lang)}</div>
@@ -127,7 +127,7 @@ function MetricsStrip({ project }: { project: ProjectData }) {
 function SectionShell({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="container" style={{ paddingBottom: 80 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 80 }}>
+      <div className="section-shell">
         <div className="mono" style={{ fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", position: "sticky", top: 100, alignSelf: "start" }}>
           {label}
         </div>
@@ -162,7 +162,7 @@ function BuildSection({ project }: { project: ProjectData }) {
   const { t, lang } = useLang();
   return (
     <SectionShell label={t("como está feito", "how it's built")}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div className="build-grid">
         {project.build!.map((b, i) => (
           <div key={i} className="hover-glow" style={{ background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", padding: "22px 24px" }}>
             <h3 style={{ fontSize: 17, fontWeight: 500, letterSpacing: "-0.01em", margin: "0 0 10px", display: "flex", alignItems: "center", gap: 10 }}>
@@ -209,8 +209,8 @@ function UpNext({ current }: { current: ProjectData }) {
             <article
               key={p.id}
               onClick={() => navigate(`/projeto/${p.slug}`)}
-              className="hover-glow"
-              style={{ display: "grid", gridTemplateColumns: "120px 1fr auto", gap: 24, alignItems: "center", padding: 16, border: "1px solid var(--line)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", cursor: "pointer", marginBottom: 12 }}
+              className="hover-glow upnext-row"
+              style={{ padding: 16, border: "1px solid var(--line)", borderRadius: "var(--r-lg)", background: "var(--bg-1)", cursor: "pointer", marginBottom: 12 }}
             >
               <div style={{ height: 80, borderRadius: "var(--r-md)", overflow: "hidden", border: "1px solid var(--line)" }}>
                 {Thumb && <Thumb />}

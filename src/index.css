@@ -211,3 +211,66 @@ html, body { transition: background var(--t-mid) var(--ease-out), color var(--t-
   color: var(--accent);
   animation: blink 1s steps(2, start) infinite;
 }
+
+/* ============ Layouts responsivos ============ */
+/* As grelhas principais vivem aqui (e não em estilos inline) exatamente
+   para poderem mudar com o tamanho do ecrã via media queries. */
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), 1fr);
+  grid-auto-rows: auto;
+  gap: 16px;
+}
+.about-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 80px; }
+.project-hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: stretch; }
+.project-thumb { min-height: 420px; }
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), 1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.section-shell { display: grid; grid-template-columns: 200px 1fr; gap: 80px; }
+.build-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.upnext-row { display: grid; grid-template-columns: 120px 1fr auto; gap: 24px; align-items: center; }
+.contact-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 64px; align-items: start; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.subject-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+/* Tablet / ecrãs médios */
+@media (max-width: 900px) {
+  .about-grid { grid-template-columns: 1fr; gap: 32px; }
+  .project-hero { grid-template-columns: 1fr; gap: 24px; }
+  .section-shell { grid-template-columns: 1fr; gap: 24px; }
+  .contact-grid { grid-template-columns: 1fr; gap: 32px; }
+}
+
+/* Telemóvel */
+@media (max-width: 760px) {
+  .container { padding: 0 20px; }
+  .projects-grid { grid-template-columns: 1fr; }
+  /* os cartões bento deixam de ocupar várias colunas/linhas
+     (os spans vêm inline, daí o !important) */
+  .projects-grid > article {
+    grid-column: auto !important;
+    grid-row: auto !important;
+    min-height: 440px !important;
+  }
+  .project-thumb { min-height: 260px; }
+  .metrics-strip { grid-template-columns: 1fr 1fr; }
+  .metrics-strip > div { border-bottom: 1px solid var(--line); }
+  .build-grid { grid-template-columns: 1fr; }
+  .hide-sm { display: none !important; }
+}
+
+/* Telemóvel estreito */
+@media (max-width: 520px) {
+  .container { padding: 0 16px; }
+  .two-col { grid-template-columns: 1fr; }
+  .subject-grid { grid-template-columns: 1fr 1fr; }
+  .metrics-strip { grid-template-columns: 1fr; }
+  .upnext-row { grid-template-columns: 84px 1fr auto; gap: 12px; }
+  .navlink { padding: 8px 7px !important; }
+  .nav-actions { gap: 8px !important; }
+}

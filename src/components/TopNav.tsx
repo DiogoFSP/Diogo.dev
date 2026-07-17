@@ -66,7 +66,7 @@ export default function TopNav() {
         </Link>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 4 }}>
-          <NavLink to="/" end style={navLinkStyle}>
+          <NavLink to="/" end className="navlink" style={navLinkStyle}>
             {({ isActive }) => (
               <>
                 {isActive && <ActiveLine />}
@@ -74,7 +74,7 @@ export default function TopNav() {
               </>
             )}
           </NavLink>
-          <NavLink to="/contacto" style={navLinkStyle}>
+          <NavLink to="/contacto" className="navlink" style={navLinkStyle}>
             {({ isActive }) => (
               <>
                 {isActive && <ActiveLine />}
@@ -84,14 +84,14 @@ export default function TopNav() {
           </NavLink>
         </nav>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <LangToggle />
           <ThemeToggle />
           <a
             href="https://github.com/DiogoFSP"
             target="_blank"
             rel="noopener"
-            className="btn btn-ghost"
+            className="btn btn-ghost hide-sm"
             style={{ fontFamily: "var(--font-mono)", fontSize: 11, textDecoration: "none" }}
           >
             <Icon name="github" size={13} /> github

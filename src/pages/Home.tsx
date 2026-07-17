@@ -297,7 +297,7 @@ function AboutStrip() {
   const navigate = useNavigate();
   return (
     <section id="about" style={{ padding: "140px 0 80px" }}>
-      <div className="container" style={{ display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 80 }}>
+      <div className="container about-grid">
         <div>
           <div className="mono" style={{ fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>/{t("sobre", "about")}</div>
           <h2 style={{ fontSize: 28, fontWeight: 400, letterSpacing: "-0.02em", margin: 0 }}>{t("Sobre.", "About.")}</h2>
@@ -345,7 +345,7 @@ export default function Home() {
         <ProjectsHeader count={projects.length} />
         <div className="container">
           {/* com poucos projetos a grelha aperta para 2 colunas; volta a 3 quando houver mais */}
-          <div style={{ display: "grid", gridTemplateColumns: `repeat(${projects.length < 3 ? 2 : 3}, 1fr)`, gridAutoRows: "auto", gap: 16 }}>
+          <div className="projects-grid" style={{ "--cols": projects.length < 3 ? 2 : 3 } as React.CSSProperties}>
             {projects.map((p) => (
               <BentoCard key={p.id} project={p} size={p.featured} onOpen={() => navigate(`/projeto/${p.slug}`)} />
             ))}
