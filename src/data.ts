@@ -61,7 +61,7 @@ export const PROJECTS: Project[] = [
     accent: "#5EBFFF",
     featured: "tall",
     status: "published",
-    github: "https://github.com/Rafael-Marques-960/PA-Project",
+    github: "https://github.com/DiogoFSP/DeepSeaMining",
     demo: null,
     course: "Programação Avançada · ISEC",
     team: ["Diogo Pinto", "Rafael Marques", "Vera Ribeiro"],
