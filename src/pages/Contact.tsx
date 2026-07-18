@@ -12,12 +12,12 @@ const FORM_CONFIGURED = WEB3FORMS_KEY.length > 0;
 type FormState = {
   name: string;
   email: string;
-  subject: "geral" | "estagio" | "projeto" | "outro";
+  subject: string;
   message: string;
   honeypot: string;
 };
 
-const EMPTY_FORM: FormState = { name: "", email: "", subject: "geral", message: "", honeypot: "" };
+const EMPTY_FORM: FormState = { name: "", email: "", subject: "", message: "", honeypot: "" };
 
 // intervalo mínimo entre envios (por browser)
 const COOLDOWN_MS = 5 * 60 * 1000;
@@ -72,16 +72,15 @@ export default function Contact() {
       : form.message.trim().length < 10
         ? t("Um pouco mais? (mínimo 10 caracteres)", "A bit more, please (10 characters minimum).")
         : null,
+    subject: !form.subject.trim()
+      ? t("Indique o assunto da mensagem.", "Please enter a subject.")
+      : null,
   };
-  const isValid = !errors.name && !errors.email && !errors.message;
-
-  const SUBJECT_TEXT: Record<FormState["subject"], string> = {
-    geral: "Geral", estagio: "Estágio", projeto: "Projeto", outro: "Outro",
-  };
+  const isValid = !errors.name && !errors.email && !errors.message && !errors.subject;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({ name: true, email: true, message: true });
+    setTouched({ name: true, email: true, subject: true, message: true });
     if (!isValid) return;
     // honeypot preenchido = bot
     if (form.honeypot) { setError(t("Ocorreu um erro.", "Something went wrong.")); return; }
@@ -92,7 +91,7 @@ export default function Contact() {
     if (waitMs > 0) {
       const mins = Math.ceil(waitMs / 60000);
       setError(t(
-        `Enviaste uma mensagem há pouco. Tenta de novo dentro de ${mins} min.`,
+        `Enviou uma mensagem há pouco. Tente novamente dentro de ${mins} min.`,
         `You just sent a message. Please try again in ${mins} min.`
       ));
       return;
@@ -105,7 +104,7 @@ export default function Contact() {
     if (!(await domainAcceptsEmail(form.email.trim()))) {
       setSending(false);
       setError(t(
-        "O domínio desse email não parece receber correio — confirma se está bem escrito.",
+        "O domínio desse email não parece receber correio — confirme se está bem escrito.",
         "That email's domain doesn't seem to accept mail — please check the spelling."
       ));
       return;
@@ -113,7 +112,7 @@ export default function Contact() {
 
     // regista a mensagem (BD ou local) sem bloquear o envio por email
     try {
-      await addMessage({ name: form.name.trim(), email: form.email.trim(), subject: form.subject, message: form.message.trim() });
+      await addMessage({ name: form.name.trim(), email: form.email.trim(), subject: form.subject.trim(), message: form.message.trim() });
     } catch { /* o email via Web3Forms continua a ser a entrega principal */ }
 
     if (FORM_CONFIGURED) {
@@ -123,11 +122,11 @@ export default function Contact() {
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({
             access_key: WEB3FORMS_KEY,
-            subject: `Novo contacto (${SUBJECT_TEXT[form.subject]}) — ${form.name.trim()}`,
+            subject: `${form.subject.trim()} — ${form.name.trim()}`,
             from_name: form.name.trim(),
             name: form.name.trim(),
             email: form.email.trim(),
-            assunto: SUBJECT_TEXT[form.subject],
+            assunto: form.subject.trim(),
             message: form.message.trim(),
           }),
         });
@@ -136,7 +135,7 @@ export default function Contact() {
       } catch {
         setSending(false);
         setError(t(
-          "Não foi possível enviar agora. Tenta novamente ou escreve para diogo@diogodev.pt.",
+          "Não foi possível enviar agora. Tente novamente ou escreva para diogo@diogodev.pt.",
           "Couldn't send right now. Please try again or email diogo@diogodev.pt."
         ));
         return;
@@ -194,8 +193,15 @@ export default function Contact() {
             </Field>
           </div>
 
-          <Field label={t("assunto", "subject")}>
-            <SubjectPicker value={form.subject} onChange={(v) => update("subject", v)} />
+          <Field label={t("assunto", "subject")} error={touched.subject ? errors.subject : null}>
+            <input
+              className="input"
+              value={form.subject}
+              maxLength={100}
+              onChange={(e) => update("subject", e.target.value)}
+              onBlur={() => blur("subject")}
+              placeholder={t("Ex.: Oportunidade de colaboração", "E.g.: Collaboration opportunity")}
+            />
           </Field>
 
           <Field
@@ -256,40 +262,6 @@ export default function Contact() {
 
       <Footer />
     </main>
-  );
-}
-
-function SubjectPicker({ value, onChange }: { value: FormState["subject"]; onChange: (v: FormState["subject"]) => void }) {
-  const { t } = useLang();
-  const opts: Array<{ v: FormState["subject"]; label: string; icon: string }> = [
-    { v: "geral", label: t("Geral", "General"), icon: "spark" },
-    { v: "estagio", label: t("Estágio", "Internship"), icon: "layers" },
-    { v: "projeto", label: t("Projeto", "Project"), icon: "code" },
-    { v: "outro", label: t("Outro", "Other"), icon: "dot" },
-  ];
-  return (
-    <div className="subject-grid">
-      {opts.map((o) => {
-        const active = value === o.v;
-        return (
-          <button key={o.v} type="button" onClick={() => onChange(o.v)} style={{
-            padding: "12px 10px",
-            background: active ? "var(--bg-2)" : "var(--bg-1)",
-            border: `1px solid ${active ? "var(--accent)" : "var(--line)"}`,
-            borderRadius: "var(--r-md)",
-            color: active ? "var(--fg)" : "var(--fg-3)",
-            fontSize: 12,
-            cursor: "pointer",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-            transition: "all 140ms var(--ease-out)",
-            boxShadow: active ? "0 0 0 3px var(--accent-soft)" : "none",
-          }}>
-            <Icon name={o.icon} size={14} />
-            <span>{o.label}</span>
-          </button>
-        );
-      })}
-    </div>
   );
 }
 
