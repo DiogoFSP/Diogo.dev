@@ -1,4 +1,4 @@
-/* Design tokens — Diogo / SitePortfolio */
+/* Design tokens — diogo.dev */
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
 
 :root {
@@ -16,7 +16,7 @@
   --fg-3: #6E6E76;
   --fg-4: #45454C;
 
-  /* Accent — amber (a escolha do design v3) */
+  /* Accent — amber */
   --accent: #FFB454;
   --accent-glow: rgba(255, 180, 84, 0.20);
   --accent-soft: rgba(255, 180, 84, 0.10);

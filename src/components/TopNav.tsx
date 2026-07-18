@@ -3,6 +3,7 @@ import { Link, NavLink } from "react-router-dom";
 import { useLang } from "../lang";
 import Icon from "./Icon";
 import LangToggle from "./LangToggle";
+import Logo from "./Logo";
 import ThemeToggle from "./ThemeToggle";
 
 function navLinkStyle({ isActive }: { isActive: boolean }): CSSProperties {
@@ -17,7 +18,7 @@ function navLinkStyle({ isActive }: { isActive: boolean }): CSSProperties {
   };
 }
 
-// Sublinhado inset do link ativo (como no design: não ocupa o padding)
+// Sublinhado inset do link ativo (não ocupa o padding)
 function ActiveLine() {
   return (
     <span
@@ -33,8 +34,10 @@ function ActiveLine() {
   );
 }
 
-export default function TopNav() {
+export default function TopNav({ onPalette }: { onPalette?: () => void }) {
   const { t } = useLang();
+  // mostra a tecla certa conforme o sistema (⌘ é do Mac)
+  const isMac = /Mac|iPhone|iPad/.test(navigator.platform);
 
   return (
     <header
@@ -62,7 +65,7 @@ export default function TopNav() {
           className="mono"
           style={{ color: "var(--fg)", textDecoration: "none", fontSize: 13 }}
         >
-          diogo<span style={{ color: "var(--fg-3)" }}>.dev</span>
+          <Logo />
         </Link>
 
         <nav style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -85,6 +88,19 @@ export default function TopNav() {
         </nav>
 
         <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {onPalette && (
+            <button
+              onClick={onPalette}
+              className="mono hide-sm"
+              title="Ctrl+K"
+              style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--r-md)", padding: "7px 10px", cursor: "pointer", color: "var(--fg-3)", fontSize: 11 }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--line-strong)")}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--line)")}
+            >
+              <Icon name="search" size={12} />
+              <span style={{ fontSize: 10, padding: "1px 5px", borderRadius: 4, border: "1px solid var(--line-strong)", background: "var(--bg-2)" }}>{isMac ? "⌘K" : "Ctrl K"}</span>
+            </button>
+          )}
           <LangToggle />
           <ThemeToggle />
           <a
