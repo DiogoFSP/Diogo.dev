@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Footer from "../components/Footer";
 import Icon from "../components/Icon";
@@ -49,6 +50,7 @@ export default function Project() {
 
       {project.story && <StorySection project={project} />}
       {project.build && <BuildSection project={project} />}
+      {project.gallery && project.gallery.length > 0 && <GallerySection project={project} />}
       {project.team && <TeamStrip project={project} />}
 
       <UpNext current={project} />
@@ -176,6 +178,82 @@ function BuildSection({ project }: { project: ProjectData }) {
           </div>
         ))}
       </div>
+    </SectionShell>
+  );
+}
+
+function GallerySection({ project }: { project: ProjectData }) {
+  const { t } = useLang();
+  const images = project.gallery!;
+  const [open, setOpen] = useState<number | null>(null);
+
+  // navegação por teclado com o lightbox aberto
+  useEffect(() => {
+    if (open === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(null);
+      if (e.key === "ArrowRight") setOpen((i) => (i === null ? i : (i + 1) % images.length));
+      if (e.key === "ArrowLeft") setOpen((i) => (i === null ? i : (i - 1 + images.length) % images.length));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, images.length]);
+
+  return (
+    <SectionShell label={t("galeria", "gallery")}>
+      <div className="gallery-grid">
+        {images.map((src, i) => (
+          <button
+            key={src}
+            type="button"
+            onClick={() => setOpen(i)}
+            className="hover-glow"
+            style={{ padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-lg)", overflow: "hidden", background: "var(--bg-1)", cursor: "zoom-in", aspectRatio: "16 / 10" }}
+            title={t("ampliar", "enlarge")}
+          >
+            <img src={src} alt={`${project.title} — ${i + 1}`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+          </button>
+        ))}
+      </div>
+
+      {open !== null && (
+        <div
+          onClick={() => setOpen(null)}
+          style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "zoom-out", animation: "fadeIn 180ms var(--ease-out)" }}
+        >
+          <img
+            src={images[open]}
+            alt={`${project.title} — ${open + 1}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: "92vw", maxHeight: "86vh", objectFit: "contain", borderRadius: "var(--r-md)", cursor: "default" }}
+          />
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpen((open - 1 + images.length) % images.length); }}
+                className="btn btn-icon"
+                style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)" }}
+                title={t("anterior", "previous")}
+              >
+                <Icon name="chevronLeft" size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setOpen((open + 1) % images.length); }}
+                className="btn btn-icon"
+                style={{ position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)" }}
+                title={t("seguinte", "next")}
+              >
+                <Icon name="chevronLeft" size={16} style={{ transform: "rotate(180deg)" }} />
+              </button>
+            </>
+          )}
+          <div className="mono" style={{ position: "absolute", bottom: 20, left: "50%", transform: "translateX(-50%)", fontSize: 11, color: "rgba(255,255,255,0.7)", letterSpacing: "0.1em" }}>
+            {open + 1} / {images.length}
+          </div>
+        </div>
+      )}
     </SectionShell>
   );
 }

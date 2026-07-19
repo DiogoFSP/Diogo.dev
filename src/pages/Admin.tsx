@@ -200,6 +200,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           demo: data.demo || null,
           course: data.course,
           image: data.image,
+          gallery: data.gallery,
           team: data.team,
           story: data.story,
           build: data.build,
@@ -505,6 +506,7 @@ type EditFormData = {
   featured: Project["featured"];
   accent: string;
   image: string | null;
+  gallery: string[] | null;
   metrics: Project["metrics"];
   team: string[] | null;
   story: Project["story"];
@@ -534,6 +536,7 @@ function EditView({ project, onSave, onCancel, isNew }: { project: Project | nul
     featured: (project?.featured || "small") as Project["featured"],
     accent: project?.accent || "#E5E5E7",
     image: (project?.image ?? null) as string | null,
+    gallery: (project?.gallery || []) as string[],
     team: project?.team?.join(", ") || "",
     metrics: (project?.metrics || []).map((m) => ({ label: pickPt(m.label), value: pickPt(m.value) })),
     story: (project?.story || []).map((s) => ({ kind: pickPt(s.kind), title: pickPt(s.title), body: pickPt(s.body) })),
@@ -573,6 +576,27 @@ function EditView({ project, onSave, onCancel, isNew }: { project: Project | nul
     await enviarFicheiro(file);
   };
 
+  const [galUploading, setGalUploading] = useState(false);
+  const [galError, setGalError] = useState<string | null>(null);
+
+  const onPickGallery = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (files.length === 0) return;
+    if (files.some((f) => f.size > 4 * 1024 * 1024)) { setGalError("Máximo 4 MB por imagem."); return; }
+    setGalUploading(true);
+    setGalError(null);
+    try {
+      const urls: string[] = [];
+      for (const file of files) urls.push(await uploadThumb(file, `${slugAtual()}-galeria`));
+      update("gallery", [...form.gallery, ...urls]);
+    } catch {
+      setGalError("Não foi possível carregar — confirmar a migração da galeria no Supabase.");
+    } finally {
+      setGalUploading(false);
+    }
+  };
+
   // código SVG colado -> guardado como ficheiro .svg no Storage e servido
   // como <img> (animações funcionam; scripts nunca correm nesse contexto)
   const usarSvgColado = async () => {
@@ -589,6 +613,13 @@ function EditView({ project, onSave, onCancel, isNew }: { project: Project | nul
   const updRow = <T,>(list: T[], i: number, patch: Partial<T>): T[] =>
     list.map((row, j) => (j === i ? { ...row, ...patch } : row));
   const delRow = <T,>(list: T[], i: number): T[] => list.filter((_, j) => j !== i);
+  const moveRow = <T,>(list: T[], i: number, dir: -1 | 1): T[] => {
+    const j = i + dir;
+    if (j < 0 || j >= list.length) return list;
+    const next = [...list];
+    [next[i], next[j]] = [next[j], next[i]];
+    return next;
+  };
 
   const submit = () => {
     if (!form.title.trim()) return;
@@ -637,6 +668,7 @@ function EditView({ project, onSave, onCancel, isNew }: { project: Project | nul
       featured: form.featured,
       accent: form.accent,
       image: form.image,
+      gallery: form.gallery.length ? form.gallery : null,
       tags: form.tags.split(",").map((s) => s.trim()).filter(Boolean),
       role: keepLoc(project?.role, form.role),
       tagline: keepLoc(project?.tagline, form.tagline),
@@ -787,6 +819,39 @@ function EditView({ project, onSave, onCancel, isNew }: { project: Project | nul
             </div>
           </FormSection>
 
+          <FormSection title="galeria — página do projeto">
+            {form.gallery.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                {form.gallery.map((src, i) => (
+                  <div key={src} style={{ position: "relative", width: 132 }}>
+                    <div style={{ width: 132, height: 84, borderRadius: "var(--r-md)", overflow: "hidden", border: "1px solid var(--line)", background: "var(--bg-1)" }}>
+                      <img src={src} alt={`galeria ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                      <button type="button" className="btn btn-icon" title="mover para trás" disabled={i === 0} style={{ opacity: i === 0 ? 0.3 : 1 }} onClick={() => update("gallery", moveRow(form.gallery, i, -1))}>
+                        <Icon name="chevronLeft" size={12} />
+                      </button>
+                      <button type="button" className="btn btn-icon" title="remover" onClick={() => update("gallery", delRow(form.gallery, i))}>
+                        <Icon name="trash" size={12} />
+                      </button>
+                      <button type="button" className="btn btn-icon" title="mover para a frente" disabled={i === form.gallery.length - 1} style={{ opacity: i === form.gallery.length - 1 ? 0.3 : 1 }} onClick={() => update("gallery", moveRow(form.gallery, i, 1))}>
+                        <Icon name="chevronLeft" size={12} style={{ transform: "rotate(180deg)" }} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className="btn" style={{ cursor: galUploading ? "wait" : "pointer", opacity: galUploading ? 0.7 : 1, alignSelf: "flex-start" }}>
+              <Icon name="upload" size={14} /> {galUploading ? "a carregar…" : "carregar imagens"}
+              <input type="file" multiple accept="image/png,image/jpeg,image/webp" style={{ display: "none" }} onChange={onPickGallery} disabled={galUploading} />
+            </label>
+            {galError && <div style={{ color: "var(--danger)", fontSize: 12 }}>{galError}</div>}
+            <div className="mono" style={{ fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5 }}>
+              prints do projeto, mostrados por esta ordem na página; png · jpg · webp até 4 MB cada
+            </div>
+          </FormSection>
+
           <FormSection title="métricas do cartão">
             {form.metrics.map((m, i) => (
               <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 34px", gap: 10, alignItems: "center" }}>
@@ -899,7 +964,8 @@ function EditView({ project, onSave, onCancel, isNew }: { project: Project | nul
           })()}
           <div className="mono" style={{ fontSize: 10, color: "var(--fg-4)", marginTop: 12, lineHeight: 1.6 }}>
             história: {form.story.filter((s) => s.title.trim() || s.body.trim()).length} passo(s) ·
-            arquitetura: {form.build.filter((b) => b.title.trim() || b.body.trim()).length} ponto(s)
+            arquitetura: {form.build.filter((b) => b.title.trim() || b.body.trim()).length} ponto(s) ·
+            galeria: {form.gallery.length} imagem(ns)
           </div>
         </aside>
       </div>

@@ -26,6 +26,7 @@ export type Project = {
   demo: string | null;
   course: Localized;
   image?: string | null;
+  gallery?: string[] | null;
   team?: string[] | null;
   story?: StoryStep[] | null;
   build?: BuildPoint[] | null;
