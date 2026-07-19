@@ -10,9 +10,11 @@ import {
   fetchMessages,
   markAllMessagesRead,
   setMessageRead,
+  setSetting,
   uploadThumb,
   upsertProject,
   useProjects,
+  useSetting,
   type Message,
 } from "../projectsStore";
 import { ProjectThumb } from "../components/thumbs";
@@ -28,7 +30,7 @@ const SUBJECT_LABELS: Record<string, string> = {
   outro: "Outro",
 };
 
-type View = "list" | "edit" | "new" | "messages";
+type View = "list" | "edit" | "new" | "messages" | "cv";
 
 // ---------- login ----------
 // fallback local: hash SHA-256 das credenciais do .env.local
@@ -257,7 +259,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         <div style={{ display: "flex", alignItems: "center", gap: 14 }} className="mono">
           <Logo size={22} />
           <span style={{ fontSize: 12, color: "var(--fg-4)" }}>
-            admin / {view === "list" ? "projetos" : view === "new" ? "novo projeto" : view === "messages" ? "mensagens" : `a editar · ${editing?.slug}`}
+            admin / {view === "list" ? "projetos" : view === "new" ? "novo projeto" : view === "messages" ? "mensagens" : view === "cv" ? "cv" : `a editar · ${editing?.slug}`}
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -280,6 +282,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
         <aside style={{ background: "var(--bg-1)", borderRight: "1px solid var(--line)", padding: "24px 16px", display: "flex", flexDirection: "column", gap: 4 }}>
           <SidebarItem icon="layers" label="projetos" count={projects.length} active={view === "list" || view === "edit" || view === "new"} onClick={() => setView("list")} />
           <SidebarItem icon="command" label="mensagens" count={unreadCount > 0 ? unreadCount : messages.length} highlight={unreadCount > 0} active={view === "messages"} onClick={() => setView("messages")} />
+          <SidebarItem icon="download" label="cv" active={view === "cv"} onClick={() => setView("cv")} />
 
           <DbStatus projects={projects.length} messages={messages.length} unread={unreadCount} />
         </aside>
@@ -295,6 +298,7 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           {view === "messages" && (
             <MessagesView messages={messages} onRead={markRead} onMarkAllRead={markAllRead} onDelete={deleteMsg} unreadCount={unreadCount} />
           )}
+          {view === "cv" && <CvView />}
         </main>
       </div>
 
@@ -303,6 +307,83 @@ function AdminPanel({ onLogout }: { onLogout: () => void }) {
           <Icon name="check" size={14} style={{ color: "var(--success)" }} /> {toast}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------- CV ----------
+
+function CvView() {
+  const { value: cvUrl, loading, refresh } = useSetting("cv_url");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const onPick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.type !== "application/pdf") { setError("O CV tem de ser um PDF."); return; }
+    if (file.size > 8 * 1024 * 1024) { setError("Máximo 8 MB."); return; }
+    setBusy(true);
+    setError(null);
+    try {
+      const url = await uploadThumb(file, "cv");
+      await setSetting("cv_url", url);
+      refresh();
+    } catch {
+      setError("Não foi possível carregar — confirmar a migração do CV no Supabase.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!confirm("Remover o CV? O botão de descarregar desaparece do site.")) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await setSetting("cv_url", null);
+      refresh();
+    } catch {
+      setError("Não foi possível remover — tentar novamente.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ maxWidth: 560 }}>
+      <div className="mono" style={{ fontSize: 11, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 8 }}>/cv</div>
+      <h2 style={{ margin: "0 0 24px", fontSize: 28, fontWeight: 400, letterSpacing: "-0.02em" }}>Currículo</h2>
+
+      <div style={{ background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", padding: 24, display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ width: 8, height: 8, borderRadius: 999, background: loading ? "var(--fg-4)" : cvUrl ? "var(--success)" : "var(--warn)", boxShadow: cvUrl ? "0 0 8px var(--success)" : "none" }} />
+          <span style={{ fontSize: 14 }}>
+            {loading ? "a verificar…" : cvUrl ? "CV carregado — o botão de descarregar está visível no site." : "Sem CV — o botão de descarregar não aparece no site."}
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <label className="btn" style={{ cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1 }}>
+            <Icon name="upload" size={14} /> {busy ? "a carregar…" : cvUrl ? "substituir CV" : "carregar CV"}
+            <input type="file" accept="application/pdf" style={{ display: "none" }} onChange={onPick} disabled={busy} />
+          </label>
+          {cvUrl && (
+            <>
+              <a className="btn btn-ghost" href={cvUrl} target="_blank" rel="noopener">
+                <Icon name="external" size={13} /> abrir
+              </a>
+              <button type="button" className="btn btn-ghost mono" style={{ fontSize: 11 }} onClick={remove} disabled={busy}>
+                <Icon name="trash" size={12} /> remover
+              </button>
+            </>
+          )}
+        </div>
+        {error && <div style={{ color: "var(--danger)", fontSize: 12 }}>{error}</div>}
+        <div className="mono" style={{ fontSize: 10.5, color: "var(--fg-4)", lineHeight: 1.5 }}>
+          pdf até 8 MB — fica no Supabase Storage; o site só mostra o botão quando existe um CV
+        </div>
+      </div>
     </div>
   );
 }

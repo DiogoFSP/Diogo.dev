@@ -94,6 +94,61 @@ export function useProjects() {
   return { projects, loading, refresh };
 }
 
+// ---------------- definições do site (chave/valor) ----------------
+
+const SETTINGS_KEY = "diogo-settings";
+
+function loadLocalSettings(): Record<string, string> {
+  try {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}") as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+export async function fetchSetting(key: string): Promise<string | null> {
+  if (supabase) {
+    const { data, error } = await supabase.from("settings").select("value").eq("key", key).maybeSingle();
+    if (error) throw error;
+    return data?.value ?? null;
+  }
+  return loadLocalSettings()[key] ?? null;
+}
+
+export async function setSetting(key: string, value: string | null): Promise<void> {
+  if (supabase) {
+    if (value === null) {
+      const { error } = await supabase.from("settings").delete().eq("key", key);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("settings").upsert({ key, value });
+      if (error) throw error;
+    }
+    return;
+  }
+  const s = loadLocalSettings();
+  if (value === null) delete s[key];
+  else s[key] = value;
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch { /* sem storage */ }
+}
+
+export function useSetting(key: string) {
+  const [value, setValue] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const refresh = useCallback(() => {
+    setLoading(true);
+    fetchSetting(key)
+      .then(setValue)
+      .catch(() => setValue(null))
+      .finally(() => setLoading(false));
+  }, [key]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  return { value, loading, refresh };
+}
+
 // ---------------- mensagens ----------------
 
 function loadLocalMessages(): Message[] {

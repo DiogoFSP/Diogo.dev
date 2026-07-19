@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useProjects } from "../projectsStore";
+import { useProjects, useSetting } from "../projectsStore";
 import { useLang } from "../lang";
 import { useTheme } from "../theme";
 import Icon from "./Icon";
@@ -24,6 +24,7 @@ export default function CmdPalette({ open, setOpen }: Props) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { projects: allProjects } = useProjects();
+  const { value: cvUrl } = useSetting("cv_url");
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,7 +79,7 @@ export default function CmdPalette({ open, setOpen }: Props) {
     const actions: Item[] = [
       { group: t("ações", "actions"), icon: "spark", label: theme === "dark" ? t("mudar para modo claro", "switch to light mode") : t("mudar para modo escuro", "switch to dark mode"), run: () => toggleTheme() },
       { group: t("ações", "actions"), icon: "globe", label: lang === "pt" ? "switch to English" : "mudar para Português", run: () => setLang(lang === "pt" ? "en" : "pt") },
-      { group: t("ações", "actions"), icon: "download", label: t("descarregar CV", "download CV"), run: () => { window.open(`${import.meta.env.BASE_URL}cv/Diogo-Pinto-CV.pdf`, "_blank"); setOpen(false); } },
+      ...(cvUrl ? [{ group: t("ações", "actions"), icon: "download", label: t("descarregar CV", "download CV"), run: () => { window.open(cvUrl, "_blank", "noopener"); setOpen(false); } }] : []),
       { group: t("ações", "actions"), icon: "command", label: t("abrir admin", "open admin"), run: () => { setOpen(false); navigate("/admin"); } },
     ];
     const links: Item[] = [
@@ -88,7 +89,7 @@ export default function CmdPalette({ open, setOpen }: Props) {
     ];
     return [...nav, ...projs, ...actions, ...links];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [t, lang, theme, pathname, allProjects]);
+  }, [t, lang, theme, pathname, allProjects, cvUrl]);
 
   // pesquisa insensível a acentos
   const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");

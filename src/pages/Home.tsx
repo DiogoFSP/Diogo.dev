@@ -4,8 +4,20 @@ import Footer from "../components/Footer";
 import Icon from "../components/Icon";
 import { ProjectThumb } from "../components/thumbs";
 import { loc, type Project } from "../data";
-import { useProjects } from "../projectsStore";
+import { useProjects, useSetting } from "../projectsStore";
 import { useLang } from "../lang";
+
+// botão do CV: só aparece quando há um CV carregado no admin
+function CvButton() {
+  const { t } = useLang();
+  const { value: cvUrl } = useSetting("cv_url");
+  if (!cvUrl) return null;
+  return (
+    <a className="btn" href={cvUrl} target="_blank" rel="noopener">
+      <Icon name="download" size={14} /> {t("descarregar CV", "download CV")}
+    </a>
+  );
+}
 
 // ---------- Hero ----------
 
@@ -95,9 +107,7 @@ function Hero() {
           <a className="btn" href="https://www.linkedin.com/in/diogofspinto17/" target="_blank" rel="noopener">
             <Icon name="external" size={14} /> LinkedIn
           </a>
-          <a className="btn" href={`${import.meta.env.BASE_URL}cv/Diogo-Pinto-CV.pdf`} download>
-            <Icon name="download" size={14} /> {t("descarregar CV", "download CV")}
-          </a>
+          <CvButton />
           <a className="btn btn-ghost" href="https://github.com/DiogoFSP" target="_blank" rel="noopener">
             <Icon name="github" size={14} /> GitHub
           </a>
@@ -318,9 +328,7 @@ function AboutStrip() {
             <button className="btn btn-primary" onClick={() => navigate("/contacto")}>
               <Icon name="arrowRight" size={14} /> {t("contactar", "get in touch")}
             </button>
-            <a className="btn" href={`${import.meta.env.BASE_URL}cv/Diogo-Pinto-CV.pdf`} download>
-              <Icon name="download" size={14} /> {t("descarregar CV", "download CV")}
-            </a>
+            <CvButton />
             <a className="btn btn-ghost" href="https://github.com/DiogoFSP" target="_blank" rel="noopener">
               <Icon name="github" size={14} /> github
             </a>
