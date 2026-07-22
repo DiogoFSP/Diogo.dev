@@ -325,6 +325,7 @@ function StatsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [tick, setTick] = useState(0);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -338,29 +339,39 @@ function StatsView() {
   }, [tick]);
 
   // agregações: por dia (14 dias), últimos 7 dias, hoje e páginas mais vistas
-  const days: { key: string; label: string; count: number }[] = [];
+  const days: { key: string; label: string; fullDate: string; count: number }[] = [];
   for (let i = 13; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    days.push({ key: dayKey(d), label: String(d.getDate()), count: 0 });
+    const key = dayKey(d);
+    const fullDate = d.toLocaleDateString("pt-PT", { day: "2-digit", month: "short" });
+    days.push({ key, label: String(d.getDate()), fullDate, count: 0 });
   }
   const byDay = new Map(days.map((d) => [d.key, d]));
   const todayKey = dayKey(new Date());
   const since7 = Date.now() - 7 * 86400000;
   let last7 = 0;
   let today = 0;
+
   const byPath = new Map<string, number>();
   for (const v of views) {
     const dt = new Date(v.created_at);
-    const slot = byDay.get(dayKey(dt));
+    const k = dayKey(dt);
+    const slot = byDay.get(k);
     if (slot) slot.count++;
     if (dt.getTime() >= since7) last7++;
-    if (dayKey(dt) === todayKey) today++;
-    byPath.set(v.path, (byPath.get(v.path) || 0) + 1);
+    if (k === todayKey) today++;
+
+    // se um dia estiver selecionado, filtra apenas esse dia para as páginas mais vistas
+    if (!selectedDay || k === selectedDay) {
+      byPath.set(v.path, (byPath.get(v.path) || 0) + 1);
+    }
   }
+
   const topPages = [...byPath.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
   const maxDay = Math.max(1, ...days.map((d) => d.count));
   const maxPath = Math.max(1, ...topPages.map(([, c]) => c));
+  const selectedDayObj = days.find((d) => d.key === selectedDay);
 
   return (
     <div style={{ maxWidth: 720 }}>
@@ -395,31 +406,91 @@ function StatsView() {
           </div>
 
           <div style={{ background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", padding: "18px 20px" }}>
-            <div className="mono" style={{ fontSize: 10, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 16 }}>
-              visitas por dia — últimos 14 dias
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div className="mono" style={{ fontSize: 10, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase" }}>
+                visitas por dia — últimos 14 dias
+              </div>
+              {selectedDayObj && (
+                <button
+                  className="mono"
+                  onClick={() => setSelectedDay(null)}
+                  style={{ background: "var(--accent-soft)", border: "1px solid var(--accent)", color: "var(--accent)", borderRadius: "var(--r-sm)", padding: "3px 8px", fontSize: 10, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                >
+                  filtro: {selectedDayObj.fullDate} ✕ (ver todos)
+                </button>
+              )}
             </div>
             <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 120 }}>
-              {days.map((d) => (
-                <div key={d.key} title={`${d.count} visita${d.count === 1 ? "" : "s"} · dia ${d.label}`} style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", height: "100%", cursor: "default" }}>
-                  <div style={{ height: `${Math.max(2, (d.count / maxDay) * 100)}%`, minHeight: 2, background: d.count > 0 ? "var(--accent)" : "var(--bg-3)", borderRadius: "3px 3px 0 0", transition: "height 240ms var(--ease-out)" }} />
-                </div>
-              ))}
+              {days.map((d) => {
+                const isSelected = selectedDay === d.key;
+                const isDimmed = selectedDay !== null && !isSelected;
+                return (
+                  <div
+                    key={d.key}
+                    onClick={() => setSelectedDay(isSelected ? null : d.key)}
+                    title={`${d.count} visita${d.count === 1 ? "" : "s"} · ${d.fullDate} ${isSelected ? "(clique para ver todos os dias)" : "(clique para filtrar este dia)"}`}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "flex-end",
+                      height: "100%",
+                      cursor: "pointer",
+                      opacity: isDimmed ? 0.35 : 1,
+                      transition: "opacity 160ms var(--ease-out)",
+                      padding: "4px 2px",
+                      borderRadius: "4px 4px 0 0",
+                      background: isSelected ? "var(--accent-soft)" : "transparent",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: `${Math.max(4, (d.count / maxDay) * 100)}%`,
+                        minHeight: 4,
+                        background: isSelected ? "var(--accent)" : d.count > 0 ? "var(--fg-2)" : "var(--bg-3)",
+                        boxShadow: isSelected ? "0 0 10px var(--accent-glow)" : "none",
+                        borderRadius: "3px 3px 0 0",
+                        transition: "all 200ms var(--ease-out)",
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
             <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-              {days.map((d, i) => (
-                <div key={d.key} className="mono" style={{ flex: 1, textAlign: "center", fontSize: 9, color: "var(--fg-4)" }}>
-                  {i % 2 === 0 ? d.label : ""}
-                </div>
-              ))}
+              {days.map((d, i) => {
+                const isSelected = selectedDay === d.key;
+                return (
+                  <div
+                    key={d.key}
+                    className="mono"
+                    onClick={() => setSelectedDay(isSelected ? null : d.key)}
+                    style={{
+                      flex: 1,
+                      textAlign: "center",
+                      fontSize: 9,
+                      color: isSelected ? "var(--accent)" : "var(--fg-4)",
+                      fontWeight: isSelected ? 600 : 400,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {i % 2 === 0 || isSelected ? d.label : ""}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           <div style={{ background: "var(--bg-1)", border: "1px solid var(--line)", borderRadius: "var(--r-lg)", padding: "18px 20px" }}>
             <div className="mono" style={{ fontSize: 10, color: "var(--fg-4)", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 14 }}>
-              páginas mais vistas — últimos 30 dias
+              {selectedDayObj
+                ? `páginas mais vistas — dia ${selectedDayObj.fullDate} (${selectedDayObj.count} visita${selectedDayObj.count === 1 ? "" : "s"})`
+                : "páginas mais vistas — últimos 30 dias"}
             </div>
             {topPages.length === 0 && !loading && (
-              <div style={{ fontSize: 13, color: "var(--fg-3)" }}>Ainda sem visitas registadas.</div>
+              <div style={{ fontSize: 13, color: "var(--fg-3)" }}>
+                {selectedDayObj ? "Sem visitas registadas neste dia." : "Ainda sem visitas registadas."}
+              </div>
             )}
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {topPages.map(([path, count]) => (
