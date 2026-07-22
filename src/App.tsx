@@ -6,6 +6,7 @@ import TopNav from "./components/TopNav";
 import Admin from "./pages/Admin";
 import Contact from "./pages/Contact";
 import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
 import Project from "./pages/Project";
 import { recordPageView } from "./projectsStore";
 
@@ -45,6 +46,7 @@ function App() {
           <Route path="/projeto/:slug" element={<Project />} />
           <Route path="/contacto" element={<Contact />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       <CmdPalette open={paletteOpen} setOpen={setPaletteOpen} />
